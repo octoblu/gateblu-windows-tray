@@ -42,7 +42,17 @@ namespace GatebluServiceTray
 
             process.StartInfo.RedirectStandardError = true;
             process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.WorkingDirectory = "C:\\Program Files (x86)\\Octoblu\\GatebluService";
+            string gatebluDir = @"C:\\Program Files\\Octoblu\\GatebluService";
+            
+            if (Environment.Is64BitProcess)
+            {
+               gatebluDir = @"C:\\Program Files (x86)\\Octoblu\\GatebluService";
+
+            }
+
+            process.StartInfo.WorkingDirectory = gatebluDir;
+            string path = System.Environment.GetEnvironmentVariable("PATH");
+            process.StartInfo.EnvironmentVariables["PATH"] = gatebluDir + @";" + path;
             var stdOutput = new StringBuilder();
             process.OutputDataReceived += (sender, args) => stdOutput.Append(args.Data);
 
@@ -86,15 +96,14 @@ namespace GatebluServiceTray
 		static void Main(string[] args)
 		{
 			var p = new Program();
-			Application.ThreadException += (o, e) => p.Log(e.Exception);
-			Application.Run();
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.Automatic);
+            Application.Run();
 		}
 
 		public Program()
 		{
 			InitTrayIcon();
             RunExternalExe(ToolFileName, "start");
-            //Log(String.Format("Sync started. Local path: {0}, Remote path: {1}", Settings.LocalPath, Settings.RemotePath));
 		}
 
 		private void InitTrayIcon()
@@ -102,9 +111,6 @@ namespace GatebluServiceTray
 			ContextMenuStrip context = new ContextMenuStrip();
 			context.Items.AddRange(new ToolStripItem[] 
 			{
-				new ToolStripMenuItem("Show log", null, (q, w) => Process.Start(logFile)),
-				new ToolStripMenuItem("Clear log", null, (q, w) => File.Delete(logFile)),
-				new ToolStripMenuItem("Open app location", null, (q, w) => Process.Start(Path.GetDirectoryName(Application.ExecutablePath))),
 				new ToolStripMenuItem("Exit", null, (q, w) => Application.Exit())
 			});
 
@@ -115,11 +121,6 @@ namespace GatebluServiceTray
 				ContextMenuStrip = context,
 				Visible = true
 			};
-			icon.MouseClick += (obj, args) =>
-			{
-				//if (args.Button == MouseButtons.Left)
-					//Process.Start(logFile);
-			};
 
 			Application.ApplicationExit += (obj, args) =>
 			{
@@ -127,17 +128,6 @@ namespace GatebluServiceTray
 				icon.Dispose();
 				context.Dispose();
 			};
-		}
-
-		public void Log(string message)
-		{
-			File.AppendAllText(logFile, String.Format("[{0}] {1}\r\n", DateTime.Now, message));
-		}
-		public void Log(Exception e)
-		{
-			Log(String.Format("Exception: {0}\r\n{1}", e.Message, e.StackTrace));
-			if (icon != null)
-				icon.ShowBalloonTip(1000, "Error", e.Message, ToolTipIcon.Error);
 		}
 	}
 }
