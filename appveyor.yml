@@ -12,7 +12,7 @@ before_build:
   - nuget restore
 
 artifacts:
-  - path: MyProject\bin\$(configuration)
+  - path: GatebluServiceTray\bin\$(configuration)
     name: GatebluServiceTray
 
 deploy:
@@ -21,6 +21,6 @@ deploy:
     secret_access_key:
       secure: J01/MZX00MKgxnFXoyiqoHSSwZbccuEfIUhw9yqRErCO0WWv/m3qDAqLe7RaN/E5
     bucket: gateblu
-    folder:
-    artifact:
-    set_public: false
+    folder: GatebluServiceTray/$(configuration)
+    artifact: GatebluServiceTray
+    set_public: true
