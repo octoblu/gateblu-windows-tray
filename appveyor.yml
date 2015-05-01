@@ -6,7 +6,7 @@ configuration: Release
 
 build:
   parallel: true
-  project: GatebluServiceTray.sln
+  project: GatebluServiceTray.csproj
 
 before_build:
   - nuget restore
