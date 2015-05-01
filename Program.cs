@@ -7,26 +7,27 @@ using System.Net;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Data;
+using log4net;
 
 namespace GatebluServiceTray
 {
 	public class Program
 	{
 		internal static Properties.Settings Settings { get { return Properties.Settings.Default; } }
-		public const string logFile = "log.txt";
 		public const string AppName = "GatebluService";
+        public string gatebluDir = @"C:\Program Files\Octoblu\GatebluService";
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public Process process;
 		protected NotifyIcon icon;
 
         // from http://stackoverflow.com/questions/206323/how-to-execute-command-line-in-c-get-std-out-results
-        const string ToolFileName = "C:\\Program Files (x86)\\Octoblu\\GatebluService\\npm.cmd";
         private string Format(string filename, string arguments)
         {
             return "'" + filename +
                 ((string.IsNullOrEmpty(arguments)) ? string.Empty : " " + arguments) +
                 "'";
         }
-        string RunExternalExe(string filename, string arguments = null)
+        void RunExternalExe(string filename, string arguments = null)
         {
             process = new Process();
 
@@ -42,68 +43,46 @@ namespace GatebluServiceTray
 
             process.StartInfo.RedirectStandardError = true;
             process.StartInfo.RedirectStandardOutput = true;
-            string gatebluDir = @"C:\\Program Files\\Octoblu\\GatebluService";
             
-            if (Environment.Is64BitProcess)
-            {
-               gatebluDir = @"C:\\Program Files (x86)\\Octoblu\\GatebluService";
-
-            }
-
             process.StartInfo.WorkingDirectory = gatebluDir;
             string path = System.Environment.GetEnvironmentVariable("PATH");
             process.StartInfo.EnvironmentVariables["PATH"] = gatebluDir + @";" + path;
-            var stdOutput = new StringBuilder();
-            process.OutputDataReceived += (sender, args) => stdOutput.Append(args.Data);
+            process.OutputDataReceived += (sender, args) => 
+                log.Debug(args.Data);
+            process.ErrorDataReceived += (sender, args) => 
+                log.Error(args.Data);
 
-            string stdError = null;
             try
             {
                 process.Start();
                 process.BeginOutputReadLine();
-                stdError = process.StandardError.ReadToEnd();
+                process.BeginErrorReadLine();
                 process.WaitForExit();
             }
             catch (Exception e)
             {
+                log.Fatal("OS error while executing " + Format(filename, arguments) + ": " + e.Message);
                 throw new Exception("OS error while executing " + Format(filename, arguments) + ": " + e.Message, e);
-            }
-
-            if (process.ExitCode == 0)
-            {
-                return stdOutput.ToString();
-            }
-            else
-            {
-                var message = new StringBuilder();
-
-                if (!string.IsNullOrEmpty(stdError))
-                {
-                    message.AppendLine(stdError);
-                }
-
-                if (stdOutput.Length != 0)
-                {
-                    message.AppendLine("Std output:");
-                    message.AppendLine(stdOutput.ToString());
-                }
-
-                throw new Exception(Format(filename, arguments) + " finished with exit code = " + process.ExitCode + ": " + message);
             }
         }
 
 		[STAThread]
 		static void Main(string[] args)
 		{
-			var p = new Program();
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.Automatic);
+            log4net.Config.XmlConfigurator.Configure();
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+            var p = new Program();
             Application.Run();
 		}
 
 		public Program()
 		{
+            if (Environment.Is64BitProcess)
+            {
+                gatebluDir = @"C:\Program Files (x86)\Octoblu\GatebluService";
+            }
 			InitTrayIcon();
-            RunExternalExe(ToolFileName, "start");
+            RunExternalExe(gatebluDir + @".\npm.cmd", "start");
 		}
 
 		private void InitTrayIcon()
@@ -122,9 +101,18 @@ namespace GatebluServiceTray
 				Visible = true
 			};
 
+            icon.MouseClick += (obj, args) =>
+			{
+				//if (args.Button == MouseButtons.Left)
+				//	Process.Start();
+			};
+
 			Application.ApplicationExit += (obj, args) =>
 			{
-                process.Kill();
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                }
 				icon.Dispose();
 				context.Dispose();
 			};
