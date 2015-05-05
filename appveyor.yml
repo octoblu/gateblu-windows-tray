@@ -19,8 +19,16 @@ after_build:
         $env:TAG_NAME=$env:APPVEYOR_REPO_COMMIT
       }
   - ps: mkdir output\$env:TAG_NAME | Out-Null
+  - ps: >-
+      if($env:APPVEYOR_REPO_TAG_NAME){
+        mkdir output\latest | Out-Null
+      }
   - ps: 7z a "bin\$env:CONFIGURATION\$env:PLATFORM\GatebluServiceTray-$env:PLATFORM.zip" "$env:APPVEYOR_BUILD_FOLDER\bin\$env:CONFIGURATION\$env:PLATFORM\*"
   - ps: cp "bin\$env:CONFIGURATION\**\*.zip" output\$env:TAG_NAME
+  - ps: >-
+      if($env:APPVEYOR_REPO_TAG_NAME){
+        cp "output\$env:TAG_NAME\*" output\latest
+      }
   - ps: $root = Resolve-Path output; [IO.Directory]::GetFiles($root.Path, '*.*', 'AllDirectories') | % { Push-AppveyorArtifact $_ -FileName $_.Substring($root.Path.Length + 1) -DeploymentName S3.GatebluServiceTray }
 
 deploy:
