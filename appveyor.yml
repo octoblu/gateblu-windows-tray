@@ -11,9 +11,17 @@ build:
 before_build:
   - nuget restore
 
-artifacts:
-  - path: bin\$(configuration)\$(platform)\GatebluServiceTray.exe
-    name: GatebluServiceTray
+after_build:
+  - ps: >-
+      if($env:APPVEYOR_REPO_TAG_NAME){
+        $env:TAG_NAME=$env:APPVEYOR_REPO_TAG_NAME
+      } else {
+        $env:TAG_NAME=$env:APPVEYOR_REPO_COMMIT
+      }
+  - ps: mkdir output\$env:TAG_NAME | Out-Null
+  - ps: 7z a GatebluServiceTray-$env:PLATFORM.zip $env:%APPVEYOR_BUILD_FOLDER%\bin\$env:CONFIGURATION\$env:PLATFORM\*
+  - ps: cp 'bin\**\*.zip' output\$env:TAG_NAME
+  - ps: $root = Resolve-Path bin\; [IO.Directory]::GetFiles($root.Path, '*.*', 'AllDirectories') | % { Push-AppveyorArtifact $_ -FileName $_.Substring($root.Path.Length + 1) -DeploymentName S3.GatebluServiceTray }
 
 deploy:
   - provider: S3
@@ -21,6 +29,6 @@ deploy:
     secret_access_key:
       secure: J01/MZX00MKgxnFXoyiqoHSSwZbccuEfIUhw9yqRErCO0WWv/m3qDAqLe7RaN/E5
     bucket: gateblu
-    folder: GatebluServiceTray
-    artifact: GatebluServiceTray
+    folder: gateblu-service-tray
+    artifact: S3.GatebluServiceTray
     set_public: true
