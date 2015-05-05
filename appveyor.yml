@@ -13,6 +13,12 @@ before_build:
 
 after_build:
   - ps: >-
+      if($env:platform -eq "x86") {
+        $env:PLATFORM_NAME=win32-ia32
+      } else {
+        $env:PLATFORM_NAME=win32-x64
+      }
+  - ps: >-
       if($env:APPVEYOR_REPO_TAG_NAME){
         $env:TAG_NAME=$env:APPVEYOR_REPO_TAG_NAME
       } else {
@@ -23,7 +29,7 @@ after_build:
       if($env:APPVEYOR_REPO_TAG_NAME){
         mkdir output\latest | Out-Null
       }
-  - ps: 7z a "bin\$env:CONFIGURATION\$env:PLATFORM\GatebluServiceTray-$env:PLATFORM.zip" "$env:APPVEYOR_BUILD_FOLDER\bin\$env:CONFIGURATION\$env:PLATFORM\*"
+  - ps: 7z a "bin\$env:CONFIGURATION\$env:PLATFORM\GatebluServiceTray-$env:PLATFORM_NAME.zip" "$env:APPVEYOR_BUILD_FOLDER\bin\$env:CONFIGURATION\$env:PLATFORM\*"
   - ps: cp "bin\$env:CONFIGURATION\**\*.zip" output\$env:TAG_NAME
   - ps: >-
       if($env:APPVEYOR_REPO_TAG_NAME){
