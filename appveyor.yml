@@ -14,9 +14,9 @@ before_build:
 after_build:
   - ps: >-
       if($env:platform -eq "x86") {
-        $env:PLATFORM_NAME=win32-ia32
+        $env:PLATFORM_NAME="win32-ia32"
       } else {
-        $env:PLATFORM_NAME=win32-x64
+        $env:PLATFORM_NAME="win32-x64"
       }
   - ps: >-
       if($env:APPVEYOR_REPO_TAG_NAME){
