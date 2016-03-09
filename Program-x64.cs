@@ -43,13 +43,13 @@ namespace GatebluServiceTray
 
             process.StartInfo.RedirectStandardError = true;
             process.StartInfo.RedirectStandardOutput = true;
-            
+
             process.StartInfo.WorkingDirectory = gatebluDir;
             string path = System.Environment.GetEnvironmentVariable("PATH");
             process.StartInfo.EnvironmentVariables["PATH"] = gatebluDir + @";" + path;
-            process.OutputDataReceived += (sender, args) => 
+            process.OutputDataReceived += (sender, args) =>
                 log.Debug(args.Data);
-            process.ErrorDataReceived += (sender, args) => 
+            process.ErrorDataReceived += (sender, args) =>
                 log.Error(args.Data);
 
             try
@@ -77,10 +77,6 @@ namespace GatebluServiceTray
 
 		public Program()
 		{
-            if (Environment.Is64BitProcess)
-            {
-                gatebluDir = @"C:\Program Files (x86)\Octoblu\GatebluService";
-            }
 			InitTrayIcon();
             RunExternalExe(gatebluDir + @".\npm.cmd", "start");
 		}
@@ -88,7 +84,7 @@ namespace GatebluServiceTray
 		private void InitTrayIcon()
 		{
 			ContextMenuStrip context = new ContextMenuStrip();
-			context.Items.AddRange(new ToolStripItem[] 
+			context.Items.AddRange(new ToolStripItem[]
 			{
 				new ToolStripMenuItem("Exit", null, (q, w) => Application.Exit())
 			});
