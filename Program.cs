@@ -15,7 +15,9 @@ namespace GatebluServiceTray
 	{
 		internal static Properties.Settings Settings { get { return Properties.Settings.Default; } }
 		public const string AppName = "GatebluService";
-        public string gatebluDir = @"C:\Program Files (x86)\Octoblu\GatebluService";
+        public string gatebluDir86 = @"C:\Program Files (x86)\Octoblu\GatebluService";
+        public string gatebluDir64 = @"C:\Program Files\Octoblu\GatebluService";
+        public string gatebluDir;
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public Process process;
 		protected NotifyIcon icon;
@@ -73,11 +75,18 @@ namespace GatebluServiceTray
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
             var p = new Program();
             Application.Run();
+            
 		}
 
 		public Program()
 		{
 			InitTrayIcon();
+            if(Directory.Exists(gatebluDir64)){
+                gatebluDir = gatebluDir64;
+            } else {
+                gatebluDir = gatebluDir86;
+            }
+            log.Debug("Using gatebluDir" + gatebluDir);
             RunExternalExe(gatebluDir + @"\npm.cmd", "start");
 		}
 
