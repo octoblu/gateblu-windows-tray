@@ -78,7 +78,7 @@ namespace GatebluServiceTray
 		public Program()
 		{
 			InitTrayIcon();
-            RunExternalExe(gatebluDir + @".\npm.cmd", "start");
+            RunExternalExe(gatebluDir + @"\npm.cmd", "start");
 		}
 
 		private void InitTrayIcon()
