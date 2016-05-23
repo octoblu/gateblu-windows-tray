@@ -75,7 +75,7 @@ namespace GatebluServiceTray
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
             var p = new Program();
             Application.Run();
-            
+
 		}
 
 		public Program()
@@ -87,7 +87,7 @@ namespace GatebluServiceTray
                 gatebluDir = gatebluDir86;
             }
             log.Debug("Using gatebluDir" + gatebluDir);
-            RunExternalExe(gatebluDir + @"\npm.cmd", "start");
+            RunExternalExe(gatebluDir + @".\npm.cmd", "start");
 		}
 
 		private void InitTrayIcon()
